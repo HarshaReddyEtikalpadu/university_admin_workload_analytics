@@ -1,0 +1,11 @@
+request_type,estimated_time_minutes,complexity_level,automation_potential,error_prone,frequency_per_week,manual_steps_required
+Leave Request,45,Medium,High,Low,25,8
+Document Verification,65,High,High,High,40,12
+IT Support,30,Low,Medium,Low,18,5
+Fee Clarification,55,High,High,High,22,10
+Course Add/Drop,35,Medium,Medium,Medium,30,6
+Transcript Request,40,Medium,High,Low,15,7
+Scholarship Verification,60,High,High,High,18,10
+Hostel Allocation,50,Medium,Medium,Low,14,7
+ID Card Reissue,25,Low,High,Low,12,4
+Enrollment Letter,30,Low,High,Low,16,5

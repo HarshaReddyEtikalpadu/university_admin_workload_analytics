@@ -1,0 +1,8 @@
+department_id,department_name,total_admins,avg_requests_per_day,workload_level
+101,Registrar,2,0,High
+102,Finance,2,0,High
+103,Academic Affairs,2,0,Medium
+104,IT Support,2,0,Medium
+105,Student Services,2,0,Low
+106,Admissions,2,0,Medium
+107,International Office,2,0,Medium

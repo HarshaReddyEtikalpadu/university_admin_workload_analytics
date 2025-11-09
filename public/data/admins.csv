@@ -1,0 +1,15 @@
+admin_id,name,email,department_id,department_name,role,hourly_rate,experience_years,specialization,avg_tasks_per_day,efficiency_score
+1,Jason West,hwright@example.org,101,Registrar,Manager,22,1,Student Affairs,12,3.49
+2,Christopher Baker,wallaceevan@example.org,102,Finance,Admin,22,11,Student Affairs,16,3.17
+3,Debra Shaw,james05@example.com,103,Academic Affairs,Senior Admin,22,1,Document Processing,11,3.47
+4,Megan Mendoza,grantshelly@example.net,104,IT Support,Manager,22,9,Verification,19,4.3
+5,Samuel Richardson,nklein@example.com,105,Student Services,Manager,30,4,Finance Operations,17,3.56
+6,Sheila Curry,jperry@example.org,106,Admissions,Admin,25,12,Finance Operations,13,3.56
+7,Andrew Carlson,wooddaniel@example.org,107,International Office,Admin,28,2,Document Processing,14,3.19
+8,Angela Odonnell,lewisgregory@example.net,101,Registrar,Senior Admin,35,5,Document Processing,19,3.92
+9,Timothy Ellis,scottguerra@example.net,102,Finance,Admin,30,2,IT Support,12,4.66
+10,Christopher Jones,cherylcollins@example.com,103,Academic Affairs,Manager,28,10,Verification,19,3.14
+11,Rachael Hill,moralesbeverly@example.org,104,IT Support,Manager,25,5,Document Processing,11,4.73
+12,Fred Park,hamiltonjohn@example.net,105,Student Services,Senior Admin,28,8,Student Affairs,13,3.33
+13,Monique Davis,richardsonpaula@example.net,106,Admissions,Senior Admin,25,11,Course Management,19,4.87
+14,Michael Pearson,brittanygardner@example.org,107,International Office,Manager,22,10,Student Affairs,10,4.07

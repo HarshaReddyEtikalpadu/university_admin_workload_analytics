@@ -1,0 +1,10 @@
+# This directory is for CSV data files
+# Place your CSV files here:
+# - requests.csv
+# - admins.csv
+# - departments.csv
+# - request_types.csv
+# - workload_log.csv
+# - daily_summary.csv
+
+# If CSV files are not present, the application will generate sample data automatically.
