@@ -1,5 +1,5 @@
-import { User, Eye, EyeOff } from 'lucide-react';
 import { DEMO_USERS, APP_NAME, APP_SUBTITLE } from '../utils/constants';
+import { User, Eye, EyeOff } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { useNavigate } from 'react-router-dom';

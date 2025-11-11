@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Bell, Settings, LogOut, Search, User } from 'lucide-react';
 import { APP_NAME } from '../utils/constants';
 
-const Header = ({ user, onLogout, onSearch }) => {
+const Header = ({ user, onLogout, onSearch, onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearchChange = (e) => {
@@ -53,8 +53,8 @@ const Header = ({ user, onLogout, onSearch }) => {
         </div>
       </div>
 
-      {/* Right Side Icons */}
-      <div className="flex items-center gap-4">
+      {/* Right Side: profile + logout aligned right */}
+      <div className="flex items-center gap-4 ml-auto">
         {/* Notifications */}
         <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
           <Bell className="w-6 h-6 text-gray-600" />
@@ -62,7 +62,7 @@ const Header = ({ user, onLogout, onSearch }) => {
         </button>
 
         {/* Settings */}
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+        <button onClick={() => onNavigate && onNavigate('settings')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
           <Settings className="w-6 h-6 text-gray-600" />
         </button>
 

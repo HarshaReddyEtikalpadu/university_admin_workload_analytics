@@ -121,10 +121,79 @@ export const applyAllFilters = (requests, user, filters) => {
   if (filters.type) {
     filtered = filterByType(filtered, filters.type);
   }
+
+  // Date range filtering by created_at
+  if (filters.dateRange || (filters.dateStart && filters.dateEnd)) {
+    filtered = filterByDateRange(filtered, filters);
+  }
   
   if (filters.search) {
     filtered = searchRequests(filtered, filters.search);
   }
   
   return filtered;
+};
+
+/**
+ * Filter by date range (created_at)
+ * Supports presets via filters.dateRange and custom via filters.dateStart/dateEnd (YYYY-MM-DD)
+ */
+export const filterByDateRange = (requests, { dateRange = 'All', dateStart = '', dateEnd = '' } = {}) => {
+  if (!requests) return [];
+  if (dateRange === 'All' && !dateStart && !dateEnd) return requests;
+
+  let start = null;
+  let end = null;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  switch (dateRange) {
+    case 'Last 7 days':
+      start = new Date(startOfToday);
+      start.setDate(start.getDate() - 6);
+      end = new Date(startOfToday);
+      end.setDate(end.getDate() + 1);
+      break;
+    case 'Last 30 days':
+      start = new Date(startOfToday);
+      start.setDate(start.getDate() - 29);
+      end = new Date(startOfToday);
+      end.setDate(end.getDate() + 1);
+      break;
+    case 'Last 3 months': {
+      start = new Date(startOfToday);
+      start.setMonth(start.getMonth() - 3);
+      end = new Date(startOfToday);
+      end.setDate(end.getDate() + 1);
+      break;
+    }
+    case 'Last 6 months': {
+      start = new Date(startOfToday);
+      start.setMonth(start.getMonth() - 6);
+      end = new Date(startOfToday);
+      end.setDate(end.getDate() + 1);
+      break;
+    }
+    case 'This year':
+      start = new Date(now.getFullYear(), 0, 1);
+      end = new Date(now.getFullYear() + 1, 0, 1);
+      break;
+    case 'Custom':
+    default:
+      if (dateStart) start = new Date(dateStart);
+      if (dateEnd) {
+        end = new Date(dateEnd);
+        end.setDate(end.getDate() + 1); // inclusive end date
+      }
+      break;
+  }
+
+  return requests.filter((req) => {
+    const ts = req.created_at ? new Date(req.created_at) : null;
+    if (!ts || isNaN(ts)) return false;
+    if (start && ts < start) return false;
+    if (end && ts >= end) return false;
+    return true;
+  });
 };

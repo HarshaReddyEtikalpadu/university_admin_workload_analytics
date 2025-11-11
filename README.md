@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Admin Workload Analysis Dashboard
 
 A comprehensive web-based dashboard for analyzing administrative workload at Silverleaf Academy. This research project visualizes administrative workload data, provides statistical analysis, and offers data-driven recommendations.
@@ -246,3 +247,11 @@ Silverleaf Academy Research Team
 ---
 
 **Built with ❤️ for Silverleaf Academy**
+=======
+# university_admin_workload_analytics
+Analytics dashboard for administrators—requests, efficiency metrics, anomaly flags, and CSV/PDF exports.
+
+Built with Next.js, Tailwind, Recharts, and SQLite (CSV-seeded).  
+Includes My Tasks, Analytics, Reports, and Settings views with department/date filters.  
+Synthetic data generated via Python (Faker/NumPy/Pandas) for 2024–2025.
+>>>>>>> 67bc9ea6de6b5a3210be3cf9b422fe54826f5270

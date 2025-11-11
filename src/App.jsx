@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DataProvider, useData } from './context/DataContext';
+import { SettingsProvider } from './context/SettingsContext';
 import Dashboard from './pages/Dashboard';
+import Settings from './pages/Settings';
+import Calendar from './pages/Calendar';
+import Reports from './pages/Reports';
 import LoginPage from './components/LoginPage';
 import Footer from './components/Footer';
 import StatusBar from './components/StatusBar';
@@ -85,6 +89,30 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <ProtectedRoute>
+                <Calendar />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <Reports user={user} />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Navigate to={user ? '/dashboard' : '/login'} replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -98,7 +126,9 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <DataProvider>
-          <AppRoutes />
+          <SettingsProvider>
+            <AppRoutes />
+          </SettingsProvider>
         </DataProvider>
       </BrowserRouter>
     </ErrorBoundary>

@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CHART_COLORS } from '../../utils/constants';
 
 const PieChartComponent = ({ 
@@ -46,7 +46,7 @@ const PieChartComponent = ({
             labelLine={false}
             label={showPercent ? ({ percent }) => `${percent}%` : undefined}
             innerRadius={innerRadius}
-            outerRadius={outerRadius}
+            outerRadius={Math.min(outerRadius, 90)}
             fill="#8884d8"
             dataKey="value"
           >
@@ -55,9 +55,17 @@ const PieChartComponent = ({
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
         </PieChart>
       </ResponsiveContainer>
+      {/* Custom legend below the chart to avoid overlap */}
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+        {dataWithPercent.map((item, idx) => (
+          <div key={item.name} className="flex items-center gap-2 text-sm text-gray-700">
+            <span className="inline-block w-3.5 h-3.5 rounded" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
+            <span className="truncate">{item.name}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

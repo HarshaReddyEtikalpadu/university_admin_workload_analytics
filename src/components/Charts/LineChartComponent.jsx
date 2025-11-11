@@ -1,6 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const LineChartComponent = ({ data, title = 'Workload Trend', xKey = 'month', yKey = 'requests', unit = 'requests' }) => {
+const LineChartComponent = ({ data, title = 'Workload Trend', xKey = 'month', yKey = 'requests', unit = 'requests', showGridlines = true }) => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -24,7 +24,7 @@ const LineChartComponent = ({ data, title = 'Workload Trend', xKey = 'month', yK
       <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          {showGridlines && <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />}
           <XAxis 
             dataKey={xKey} 
             tick={{ fontSize: 12 }}

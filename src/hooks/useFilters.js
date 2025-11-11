@@ -11,6 +11,9 @@ export const useFilters = (requests, user) => {
     priority: 'All',
     type: 'All',
     search: '',
+    dateRange: 'All',
+    dateStart: '',
+    dateEnd: '',
   });
 
   const filteredRequests = useMemo(() => {
@@ -32,6 +35,9 @@ export const useFilters = (requests, user) => {
       priority: 'All',
       type: 'All',
       search: '',
+      dateRange: 'All',
+      dateStart: '',
+      dateEnd: '',
     });
   };
 

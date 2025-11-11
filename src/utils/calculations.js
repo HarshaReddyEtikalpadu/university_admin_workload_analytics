@@ -101,6 +101,70 @@ export const calculateKPIs = (requests) => {
 };
 
 /**
+ * Compute resolution time in minutes using timestamps; falls back to processing_time_minutes.
+ */
+export const getResolutionMinutes = (req, useTimestamp = true) => {
+  if (useTimestamp) {
+    const created = req?.created_at ? new Date(req.created_at) : null;
+    const resolved = req?.resolved_at ? new Date(req.resolved_at) : null;
+    if (created && resolved && !isNaN(created) && !isNaN(resolved)) {
+      return Math.max(0, (resolved.getTime() - created.getTime()) / 60000);
+    }
+  }
+  return Number(req?.processing_time_minutes) || 0;
+};
+
+/**
+ * Average resolution time in minutes for resolved/approved items based on timestamps.
+ */
+export const getAvgResolutionMinutes = (requests, useTimestamp = true) => {
+  if (!requests) return 0;
+  const done = requests.filter((r) => r.status === 'Approved' || r.status === 'Resolved');
+  if (done.length === 0) return 0;
+  const minutes = done.map((r) => getResolutionMinutes(r, useTimestamp));
+  return parseFloat(calculateMean(minutes).toFixed(0));
+};
+
+/**
+ * SLA compliance percentage using timestamp-based resolution minutes threshold.
+ */
+export const getSLACompliance = (requests, thresholdMinutes = 60, useTimestamp = true) => {
+  if (!requests) return 0;
+  const done = requests.filter((r) => r.status === 'Approved' || r.status === 'Resolved');
+  if (done.length === 0) return 0;
+  const within = done.filter((r) => getResolutionMinutes(r, useTimestamp) <= thresholdMinutes).length;
+  return parseFloat(((within / done.length) * 100).toFixed(0));
+};
+
+/**
+ * Monthly volume of requests created in current month (all statuses)
+ */
+export const getMonthlyVolume = (requests) => {
+  if (!requests) return 0;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  return requests.filter((r) => r.created_at && new Date(r.created_at) >= start).length;
+};
+
+/**
+ * Monthly cost using admins hourly_rate, defaultRate if missing.
+ */
+export const getMonthlyCost = (requests, admins = [], defaultRate = 25, useTimestamp = true) => {
+  if (!requests) return 0;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const rateById = new Map();
+  admins?.forEach((a) => rateById.set(Number(a.admin_id) || a.admin_id, Number(a.hourly_rate) || defaultRate));
+  const monthReqs = requests.filter((r) => r.created_at && new Date(r.created_at) >= start);
+  const total = monthReqs.reduce((sum, r) => {
+    const mins = getResolutionMinutes(r, useTimestamp);
+    const rate = rateById.get(Number(r.assigned_admin_id)) ?? defaultRate;
+    return sum + (mins / 60) * rate;
+  }, 0);
+  return parseFloat(total.toFixed(2));
+};
+
+/**
  * Get request data grouped by type for pie chart
  */
 export const getRequestTypeData = (requests) => {

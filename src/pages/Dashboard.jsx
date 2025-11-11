@@ -1,4 +1,5 @@
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, Suspense, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   Clock, 
@@ -18,8 +19,10 @@ import LineChartComponent from '../components/Charts/LineChartComponent';
 import HeatmapTable from '../components/Charts/HeatmapTable';
 import DataSourcePanel from '../components/DataSourcePanel';
 import DataTable from '../components/DataTable';
+import MyTasksOverview from '../components/MyTasksOverview';
 import AnalysisSection from '../components/AnalysisSection';
 import { useFilters } from '../hooks/useFilters';
+import { useSettings } from '../context/SettingsContext';
 import {
   calculateKPIs,
   getRequestTypeData,
@@ -27,10 +30,52 @@ import {
   getTrendData,
   getHeatmapData,
   getDescriptiveStats,
+  getSLACompliance,
+  getAvgResolutionMinutes,
+  getMonthlyVolume,
+  getMonthlyCost,
 } from '../utils/calculations';
 
 const Dashboard = ({ user, data, onLogout }) => {
-  const { filters, filteredRequests, updateFilter } = useFilters(data?.requests || [], user);
+  const { filters, filteredRequests, updateFilter, resetFilters } = useFilters(data?.requests || [], user);
+  const { settings } = useSettings();
+  const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState('dashboard');
+
+  const sectionRefs = {
+    dashboard: useRef(null),
+    analytics: useRef(null),
+    tasks: useRef(null),
+    reports: useRef(null),
+    team: useRef(null),
+    calendar: useRef(null),
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActiveSection(visible[0].target.id);
+      },
+      { root: null, rootMargin: '0px 0px -60% 0px', threshold: [0.2, 0.4, 0.6] }
+    );
+    Object.keys(sectionRefs).forEach((key) => {
+      const el = sectionRefs[key].current;
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  const handleNavigate = (dest) => {
+    if (dest === 'settings') return navigate('/settings');
+    const scrollKeys = ['dashboard', 'analytics', 'tasks', 'reports', 'team', 'calendar'];
+    if (scrollKeys.includes(dest)) {
+      const el = sectionRefs[dest]?.current;
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Calculate all metrics
   const kpis = useMemo(() => {
@@ -49,6 +94,35 @@ const Dashboard = ({ user, data, onLogout }) => {
   const stats = useMemo(() => {
     return getDescriptiveStats(filteredRequests);
   }, [filteredRequests]);
+
+  // Reports KPIs and charts
+  const reportKpis = useMemo(() => {
+    return {
+      sla: getSLACompliance(filteredRequests, 60, true),
+      avgResMins: getAvgResolutionMinutes(filteredRequests, true),
+      monthlyVolume: getMonthlyVolume(filteredRequests),
+      monthlyCost: getMonthlyCost(filteredRequests, data?.admins || [], 25, true),
+    };
+  }, [filteredRequests, data]);
+
+  const reportsStatusPie = useMemo(() => {
+    const by = { Approved: 0, Rejected: 0, Pending: 0, Resolved: 0 };
+    filteredRequests.forEach(r => { by[r.status] = (by[r.status] || 0) + 1; });
+    return Object.entries(by).map(([name, value]) => ({ name, value }));
+  }, [filteredRequests]);
+
+  const [deptScope, setDeptScope] = useState(() => settings.deptChartScope || 'all');
+  const reportsDeptBar = useMemo(() => {
+    const source = deptScope === 'filtered' ? (filteredRequests || []) : (data?.requests || []);
+    const by = {};
+    source.forEach((r) => {
+      const k = r.department_name || 'Unknown';
+      by[k] = (by[k] || 0) + 1;
+    });
+    return Object.entries(by)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [deptScope, filteredRequests, data]);
 
   const handleSearch = (query) => {
     updateFilter('search', query);
@@ -149,8 +223,8 @@ const Dashboard = ({ user, data, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={user} onLogout={onLogout} onSearch={handleSearch} />
-      <Sidebar user={user} filters={filters} onFilterChange={updateFilter} />
+      <Header user={user} onLogout={onLogout} onSearch={handleSearch} onNavigate={handleNavigate} />
+      <Sidebar user={user} filters={filters} onFilterChange={updateFilter} onResetFilters={resetFilters} onNavigate={handleNavigate} activeSection={activeSection} />
       
       <main className="ml-64 mt-20 p-4 md:p-6">
         {/* Small verification / status bar */}
@@ -173,7 +247,7 @@ const Dashboard = ({ user, data, onLogout }) => {
         </div>
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Section A: KPI Metric Cards */}
-          <section>
+          <section id="dashboard" ref={sectionRefs.dashboard}>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Dashboard Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {metricCards.map((card, index) => (
@@ -191,9 +265,12 @@ const Dashboard = ({ user, data, onLogout }) => {
             </div>
           </section>
 
-          {/* Section B: Charts */}
-          <section>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Analytics</h2>
+          {/* Section B: Analytics */}
+          <section id="analytics" ref={sectionRefs.analytics}>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
+              <p className="text-sm text-gray-500">Home > Analytics</p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <PieChartComponent data={chartData.pieData} title="Requests by Type" />
               <BarChartComponent 
@@ -201,12 +278,14 @@ const Dashboard = ({ user, data, onLogout }) => {
                 title="Avg Processing Time by Type"
                 xKey="name"
                 yKey="value"
+                showGridlines={settings.gridlines}
               />
               <LineChartComponent 
                 data={chartData.trendData} 
                 title="Workload Trend (6 Months)"
                 xKey="month"
                 yKey="requests"
+                showGridlines={settings.gridlines}
               />
             </div>
           </section>
@@ -221,9 +300,83 @@ const Dashboard = ({ user, data, onLogout }) => {
             <AnalysisSection stats={stats} requests={filteredRequests} />
           </section>
 
-          {/* Section E: Data Table */}
-          <section>
+          {/* Section E: Tasks Overview + Data Table */}
+          <section id="tasks" ref={sectionRefs.tasks}>
+            <MyTasksOverview
+              requests={filteredRequests}
+              user={user}
+              onRefresh={() => window.location.reload()}
+              onClearFilters={resetFilters}
+            />
+            <div className="h-4" />
             <DataTable data={filteredRequests} onExport={handleExport} />
+          </section>
+
+          {/* Section F: Reports */}
+          <section id="reports" ref={sectionRefs.reports}>
+            {/* Header */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">Reports</h2>
+              <p className="text-sm text-gray-500">Home > Reports</p>
+            </div>
+            {/* KPI Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <div className="text-sm text-gray-500 mb-1">SLA Compliance</div>
+                <div className="text-4xl font-bold text-gray-900">{reportKpis.sla}%</div>
+                {/* trend placeholder intentionally removed */}
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <div className="text-sm text-gray-500 mb-1">Avg Resolution</div>
+                <div className="text-4xl font-bold text-gray-900">{reportKpis.avgResMins} min</div>
+                {/* trend placeholder intentionally removed */}
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <div className="text-sm text-gray-500 mb-1">Monthly Volume</div>
+                <div className="text-4xl font-bold text-gray-900">{reportKpis.monthlyVolume.toLocaleString()}</div>
+                {/* trend placeholder intentionally removed */}
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <div className="text-sm text-gray-500 mb-1">Monthly Cost</div>
+                <div className="text-4xl font-bold text-gray-900">${reportKpis.monthlyCost?.toLocaleString?.() || reportKpis.monthlyCost}</div>
+                {/* trend placeholder intentionally removed */}
+              </div>
+            </div>
+            {/* Charts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <PieChartComponent data={reportsStatusPie} title="Requests by Status" />
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-base font-semibold text-gray-800">Requests by Department</h4>
+                  <div className="text-sm">
+                    <label className="mr-2">Scope:</label>
+                    <select value={deptScope} onChange={(e) => setDeptScope(e.target.value)} className="border rounded px-2 py-1">
+                      <option value="all">All</option>
+                      <option value="filtered">Filtered</option>
+                    </select>
+                  </div>
+                </div>
+                <BarChartComponent data={reportsDeptBar} title="Requests by Department" xKey="name" yKey="value" showGridlines={settings.gridlines} horizontal />
+              </div>
+            </div>
+          </section>
+
+          {/* Section G: Team (anchor) */}
+          <section id="team" ref={sectionRefs.team}>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+              <h2 className="text-2xl font-bold text-gray-900">Team</h2>
+              <p className="text-sm text-gray-500">Home > Team</p>
+              <p className="text-sm text-gray-600 mt-2">Team overview placeholder.</p>
+            </div>
+          </section>
+
+          {/* Section H: Calendar (anchor) */}
+          <section id="calendar" ref={sectionRefs.calendar}>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+              <h2 className="text-2xl font-bold text-gray-900">Calendar</h2>
+              <p className="text-sm text-gray-500">Home > Calendar</p>
+              <p className="text-sm text-gray-600 mt-2">Calendar placeholder.</p>
+            </div>
           </section>
         </div>
       </main>
