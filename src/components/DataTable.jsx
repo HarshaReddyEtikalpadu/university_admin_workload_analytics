@@ -139,7 +139,7 @@ const DataTable = ({ data }) => {
         <h3 className="text-lg font-semibold text-gray-800">Request Details</h3>
         <button
           onClick={handleExportCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-primary-blue/90 transition-colors"
         >
           <Download className="w-4 h-4" />
           <span>Export CSV</span>

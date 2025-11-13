@@ -27,3 +27,84 @@
     display: none;
   }
 }
+
+/* Settings-driven theming */
+:root {
+  --accent: #3B82F6; /* default Blue */
+}
+
+/* Map commonly used classes to the accent variable */
+.bg-primary-blue { background-color: var(--accent) !important; }
+.text-primary-blue { color: var(--accent) !important; }
+.border-primary-blue { border-color: var(--accent) !important; }
+
+/* Tailwind ring color helper for focus:ring-primary-blue */
+.focus\:ring-primary-blue:focus { --tw-ring-color: var(--accent) !important; }
+
+/* Gradient helpers used in header/login */
+.from-silverleaf-blue { --tw-gradient-from: var(--accent) !important; --tw-gradient-to: rgb(59 130 246 / 0) !important; }
+.to-primary-blue { --tw-gradient-to: var(--accent) !important; }
+
+/* Density adjustments */
+:root[data-density='compact'] .p-6 { padding: 1rem !important; }
+:root[data-density='compact'] .p-5 { padding: 0.875rem !important; }
+:root[data-density='compact'] .p-4 { padding: 0.75rem !important; }
+:root[data-density='compact'] .py-3 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+:root[data-density='compact'] .px-4 { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+:root[data-density='compact'] .gap-6 { gap: 1rem !important; }
+:root[data-density='compact'] .gap-4 { gap: 0.75rem !important; }
+
+/* Accent hover helpers */
+.hover\:bg-primary-blue\/90:hover { background-color: var(--accent) !important; filter: brightness(0.9); }
+.hover\:bg-primary-blue\/80:hover { background-color: var(--accent) !important; filter: brightness(0.8); }
+.hover\:text-primary-blue:hover { color: var(--accent) !important; }
+.ring-primary-blue { --tw-ring-color: var(--accent) !important; }
+
+/* Dark theme surface overrides */
+:root[data-theme='dark'] body { background-color: #0f172a; color: #e5e7eb; }
+:root[data-theme='dark'] .bg-gray-50 { background-color: #0b1220 !important; }
+:root[data-theme='dark'] .bg-white { background-color: #0b1220 !important; }
+:root[data-theme='dark'] .border-gray-200 { border-color: #1f2937 !important; }
+:root[data-theme='dark'] .text-gray-900 { color: #f9fafb !important; }
+:root[data-theme='dark'] .text-gray-800 { color: #e5e7eb !important; }
+:root[data-theme='dark'] .text-gray-700 { color: #d1d5db !important; }
+:root[data-theme='dark'] .text-gray-600 { color: #e5e7eb !important; }
+:root[data-theme='dark'] .text-gray-500 { color: #d1d5db !important; }
+:root[data-theme='dark'] .text-gray-400 { color: #cbd5e1 !important; }
+:root[data-theme='dark'] .hover\:bg-gray-100:hover { background-color: #111827 !important; }
+
+/* Dark theme: make filters/inputs clearer */
+:root[data-theme='dark'] input,
+:root[data-theme='dark'] select,
+:root[data-theme='dark'] textarea {
+  background-color: #111827 !important; /* slate-800 */
+  color: #e5e7eb !important;            /* gray-200 */
+  border-color: #374151 !important;      /* gray-700 */
+}
+
+:root[data-theme='dark'] input::placeholder,
+:root[data-theme='dark'] textarea::placeholder {
+  color: #9ca3af !important;            /* gray-400 */
+}
+
+:root[data-theme='dark'] .border-gray-300 { border-color: #374151 !important; }
+
+/* Card section subtitles and labels pop a bit more */
+:root[data-theme='dark'] h2.text-lg,
+:root[data-theme='dark'] h3.text-lg,
+:root[data-theme='dark'] label,
+:root[data-theme='dark'] .text-sm.text-gray-500 {
+  color: #e5e7eb !important;
+}
+
+/* Rounded Cards toggle: when OFF (no .rounded-cards), force square corners for common card radii */
+:root:not(.rounded-cards) .rounded-2xl,
+:root:not(.rounded-cards) .rounded-xl,
+:root:not(.rounded-cards) .rounded-lg,
+:root:not(.rounded-cards) .rounded-md {
+  border-radius: 0 !important;
+}
+
+/* When ON, make corners a bit more pronounced for visibility */
+:root.rounded-cards .rounded-xl { border-radius: 1rem !important; }
+:root.rounded-cards .rounded-2xl { border-radius: 1.25rem !important; }

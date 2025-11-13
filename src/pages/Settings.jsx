@@ -51,9 +51,8 @@ const Settings = () => {
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Theme</label>
                   <select value={settings.theme} onChange={(e) => updateSetting('theme', e.target.value)} className="w-full border rounded-md px-3 py-2">
-                    <option>Light (default)</option>
+                    <option>Light</option>
                     <option>Dark</option>
-                    <option>System</option>
                   </select>
                 </div>
                 <div>
@@ -85,86 +84,150 @@ const Settings = () => {
             </div>
 
             {/* Notifications */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <h2 className="text-lg font-semibold mb-4">Notifications</h2>
-              <div className="space-y-3">
-                <label className="flex items-center justify-between">
-                  <span>Daily summary email</span>
-                  <input type="checkbox" checked={settings.dailyEmail} onChange={(e) => updateSetting('dailyEmail', e.target.checked)} />
-                </label>
-                <label className="flex items-center justify-between">
-                  <span>Weekly PDF report</span>
-                  <input type="checkbox" checked={settings.weeklyPdf} onChange={(e) => updateSetting('weeklyPdf', e.target.checked)} />
-                </label>
-                <label className="flex items-center justify-between">
-                  <span>Real-time anomaly alerts</span>
-                  <input type="checkbox" checked={settings.realtimeAlerts} onChange={(e) => updateSetting('realtimeAlerts', e.target.checked)} />
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">Quiet Hours (from)</label>
-                    <input type="time" value={settings.quietStart} onChange={(e) => updateSetting('quietStart', e.target.value)} className="w-full border rounded-md px-3 py-2" />
-                  </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+            <h2 className="text-lg font-semibold mb-4">Notifications</h2>
+            <div className="space-y-3">
+              <label className="flex items-center justify-between">
+                <span>Daily summary email</span>
+                <input type="checkbox" checked={settings.dailyEmail} onChange={(e) => updateSetting('dailyEmail', e.target.checked)} />
+              </label>
+              <label className="flex items-center justify-between">
+                <span>Weekly PDF report</span>
+                <input type="checkbox" checked={settings.weeklyPdf} onChange={(e) => updateSetting('weeklyPdf', e.target.checked)} />
+              </label>
+              <label className="flex items-center justify-between">
+                <span>Real-time anomaly alerts</span>
+                <input type="checkbox" checked={settings.realtimeAlerts} onChange={(e) => updateSetting('realtimeAlerts', e.target.checked)} />
+              </label>
+              <div className="flex items-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const ok = await window.Notification?.requestPermission?.();
+                      alert(ok === 'granted' ? 'Browser notifications enabled.' : 'Permission was not granted.');
+                    } catch {
+                      alert('Your browser does not support Notification API.');
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-md bg-primary-blue text-white text-sm"
+                >
+                  Enable Browser Notifications
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      if (window.Notification && Notification.permission === 'granted') {
+                        new Notification('Test Notification', { body: 'This is a test message.' });
+                      } else {
+                        alert('Notifications not granted. Click Enable first.');
+                      }
+                    } catch {
+                      alert('Notifications not supported in this browser.');
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-md bg-gray-100 text-sm"
+                >
+                  Send Test
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Quiet Hours (from)</label>
+                  <input type="time" value={settings.quietStart} onChange={(e) => updateSetting('quietStart', e.target.value)} className="w-full border rounded-md px-3 py-2" />
+                </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">to</label>
                     <input type="time" value={settings.quietEnd} onChange={(e) => updateSetting('quietEnd', e.target.value)} className="w-full border rounded-md px-3 py-2" />
                   </div>
                 </div>
                 <p className="text-xs text-gray-500">No push alerts during quiet hours.</p>
+
+                {/* EmailJS (optional) */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-800 mb-2">EmailJS (optional)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Service ID</label>
+                      <input
+                        type="text"
+                        value={settings.emailjsService || ''}
+                        onChange={(e) => updateSetting('emailjsService', e.target.value)}
+                        className="w-full border rounded-md px-3 py-2"
+                        placeholder="e.g., service_xxxxx"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Template ID</label>
+                      <input
+                        type="text"
+                        value={settings.emailjsTemplate || ''}
+                        onChange={(e) => updateSetting('emailjsTemplate', e.target.value)}
+                        className="w-full border rounded-md px-3 py-2"
+                        placeholder="e.g., template_xxxxx"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Public Key</label>
+                      <input
+                        type="text"
+                        value={settings.emailjsPublicKey || ''}
+                        onChange={(e) => updateSetting('emailjsPublicKey', e.target.value)}
+                        className="w-full border rounded-md px-3 py-2"
+                        placeholder="e.g., a1b2c3..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Recipient Email</label>
+                      <input
+                        type="email"
+                        value={settings.emailRecipient || ''}
+                        onChange={(e) => updateSetting('emailRecipient', e.target.value)}
+                        className="w-full border rounded-md px-3 py-2"
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      type="button"
+                      className="px-3 py-1.5 rounded-md bg-primary-blue text-white text-sm"
+                      onClick={async () => {
+                        try {
+                          if (!window.emailjs) {
+                            alert('EmailJS SDK not found on window.emailjs');
+                            return;
+                          }
+                          if (!settings.emailjsService || !settings.emailjsTemplate || !settings.emailjsPublicKey || !settings.emailRecipient) {
+                            alert('Please fill Service ID, Template ID, Public Key, and Recipient Email.');
+                            return;
+                          }
+                          // Minimal test payload
+                          await window.emailjs.send(
+                            settings.emailjsService,
+                            settings.emailjsTemplate,
+                            { to_email: settings.emailRecipient, subject: 'Weekly Report (manual)', message: 'Triggered from Settings.' },
+                            settings.emailjsPublicKey
+                          );
+                          alert('Weekly report email sent via EmailJS.');
+                        } catch (e) {
+                          console.warn(e);
+                          alert('Email send failed; check console for details.');
+                        }
+                      }}
+                    >
+                      Send Weekly Report now
+                    </button>
+                    <span className="text-xs text-gray-500">Requires EmailJS SDK and valid credentials.</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Analytics & Reports */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <h2 className="text-lg font-semibold mb-4">Analytics & Reports</h2>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">SLA Threshold (minutes)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={settings.slaThreshold}
-                    onChange={(e) => updateSetting('slaThreshold', Number(e.target.value) || 0)}
-                    className="w-full border rounded-md px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Resolution Source</label>
-                  <div className="flex items-center gap-4 text-sm">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        checked={settings.useTimestampResolution}
-                        onChange={() => updateSetting('useTimestampResolution', true)}
-                      />
-                      Timestamps (resolved_at - created_at)
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        checked={!settings.useTimestampResolution}
-                        onChange={() => updateSetting('useTimestampResolution', false)}
-                      />
-                      processing_time_minutes
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1">Department Chart Scope</label>
-                  <select
-                    value={settings.deptChartScope}
-                    onChange={(e) => updateSetting('deptChartScope', e.target.value)}
-                    className="w-full border rounded-md px-3 py-2"
-                  >
-                    <option value="all">All data</option>
-                    <option value="filtered">Filtered view</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Analytics & Reports removed per request */}
         </div>
       </main>
     </div>
@@ -172,4 +235,3 @@ const Settings = () => {
 };
 
 export default Settings;
-

@@ -44,7 +44,7 @@ class ErrorBoundary extends Component {
               )}
               <button
                 onClick={() => window.location.reload()}
-                className="mt-6 px-4 py-2 bg-primary-blue text-white rounded hover:bg-blue-600 transition-colors"
+                className="mt-6 px-4 py-2 bg-primary-blue text-white rounded hover:bg-primary-blue/90 transition-colors"
               >
                 Refresh Page
               </button>
@@ -59,3 +59,4 @@ class ErrorBoundary extends Component {
 }
 
 export default ErrorBoundary;
+

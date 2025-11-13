@@ -39,6 +39,7 @@ import {
   getMonthlyCost,
 } from '../utils/calculations';
 import { applyAllFilters } from '../utils/filters';
+import { withinQuietHours, notify, scheduleDailyExport, scheduleWeeklyEmail, downloadCSV } from '../utils/notifications';
 
 const Dashboard = ({ user, data, onLogout }) => {
   const { filters, filteredRequests, updateFilter, resetFilters } = useFilters(data?.requests || [], user);
@@ -115,57 +116,104 @@ const Dashboard = ({ user, data, onLogout }) => {
   const analyticsRequests = useMemo(() => {
     const noDeptFilters = { ...filters, department: 'All' };
     return applyAllFilters(data?.requests || [], user, noDeptFilters);
-    // Even if filters.department changes, the pie stays based on 'All'.
   }, [data?.requests, user, filters]);
 
-  // Build 12-month workload trend from CSV rows, respecting Department, and
-  // ignoring Date Range except for "Last year" (and implicitly current year otherwise).
+  // Build 12-month workload trend
   const trendData = useMemo(() => {
     const now = new Date();
-    const targetYear = (filters?.dateRange === 'Last year')
-      ? now.getFullYear() - 1
-      : now.getFullYear();
-
-    // Start from all requests, then apply department/status/etc. but clear date constraints
+    const targetYear = (filters?.dateRange === 'Last year') ? now.getFullYear() - 1 : now.getFullYear();
     const baseFilters = { ...filters, dateRange: 'All', dateStart: '', dateEnd: '' };
     const scoped = applyAllFilters(data?.requests || [], user, baseFilters) || [];
-
     const buckets = Array.from({ length: 12 }, (_, i) => ({ month: new Date(targetYear, i, 1).toLocaleString('en-US', { month: 'short' }), requests: 0 }));
-
     scoped.forEach((r) => {
-      if (!r.created_at) return;
-      const d = new Date(r.created_at);
-      if (isNaN(d)) return;
-      if (d.getFullYear() !== targetYear) return;
-      const m = d.getMonth();
-      buckets[m].requests += 1;
+      if (!r.created_at) return; const d = new Date(r.created_at); if (isNaN(d) || d.getFullYear() !== targetYear) return; buckets[d.getMonth()].requests += 1;
     });
-
     return buckets;
   }, [data?.requests, user, filters]);
 
-  const chartData = useMemo(() => {
-    return {
-      pieData: getRequestTypeData(analyticsRequests),
-      barData: getAvgTimeByType(analyticsRequests),
-      trendData,
-      heatmapData: getHeatmapData(filteredRequests),
-    };
-  }, [analyticsRequests, filteredRequests, trendData]);
+  const chartData = useMemo(() => ({
+    pieData: getRequestTypeData(analyticsRequests),
+    barData: getAvgTimeByType(analyticsRequests),
+    trendData,
+    heatmapData: getHeatmapData(filteredRequests),
+  }), [analyticsRequests, filteredRequests, trendData]);
 
   const stats = useMemo(() => {
     return getDescriptiveStats(filteredRequests);
   }, [filteredRequests]);
 
-  // Reports KPIs and charts
-  const reportKpis = useMemo(() => {
-    return {
-      sla: getSLACompliance(filteredRequests, Number(settings.slaThreshold) || 60, !!settings.useTimestampResolution),
-      avgResMins: getAvgResolutionMinutes(filteredRequests, !!settings.useTimestampResolution),
-      monthlyVolume: getMonthlyVolume(filteredRequests),
-      monthlyCost: getMonthlyCost(filteredRequests, data?.admins || [], 25, !!settings.useTimestampResolution),
+  // Daily CSV export and weekly email schedule (front-end only, while app is open)
+  useEffect(() => {
+    // Schedule daily export of filtered rows (as CSV)
+    scheduleDailyExport(settings, async () => {
+      // Build rows: simple export of key fields
+      const headers = ['request_id','department_name','request_type','status','processing_time_minutes','created_at'];
+      const rows = [headers];
+      (filteredRequests || []).forEach((r) => rows.push([
+        r.request_id,
+        r.department_name || r.department || '',
+        r.request_type || '',
+        r.status || '',
+        r.processing_time_minutes ?? '',
+        r.created_at || '',
+      ]));
+      return rows;
+    });
+
+    // Schedule weekly email via EmailJS if configured
+    scheduleWeeklyEmail(settings, async () => {
+      // Include a small CSV inline in the email params
+      const headers = ['Department','Status','Count'];
+      const by = {};
+      (filteredRequests || []).forEach((r) => {
+        const k = `${r.department_name || r.department || 'Unknown'}|${r.status || ''}`;
+        by[k] = (by[k] || 0) + 1;
+      });
+      const rows = [headers];
+      Object.entries(by).forEach(([k,v]) => {
+        const [dept, status] = k.split('|');
+        rows.push([dept, status, v]);
+      });
+      const csvText = rows.map((r) => r.map((c) => String(c)).join(',')).join('\n');
+      return { subject: 'Weekly Workload Report', message: 'Attached CSV content in message body.', csv: csvText };
+    });
+  }, [filteredRequests, settings]);
+
+  // Realtime anomaly watcher (pending surge or high error rate)
+  useEffect(() => {
+    if (!settings.realtimeAlerts) return;
+    let last = { pending: 0, errorRate: 0 };
+    let mounted = true;
+    const tick = async () => {
+      if (!mounted) return;
+      try {
+        const k = calculateKPIs(filteredRequests || []);
+        const surge = last.pending > 0 ? ((k.pendingRequests - last.pending) / last.pending) : 0;
+        const highError = k.errorRate >= 15; // 15% threshold
+        const pendingJump = k.pendingRequests >= 10 && surge >= 0.2; // +20% and at least 10 pending
+        if (!withinQuietHours(settings) && (pendingJump || highError)) {
+          const body = pendingJump
+            ? `Pending surged to ${k.pendingRequests} (+${(surge*100).toFixed(0)}%).`
+            : `Error rate high: ${k.errorRate}%`;
+          await notify({ title: 'Anomaly detected', body });
+        }
+        last = { pending: k.pendingRequests, errorRate: k.errorRate };
+      } catch {}
+      finally {
+        setTimeout(tick, 60 * 1000);
+      }
     };
-  }, [filteredRequests, data, settings.slaThreshold, settings.useTimestampResolution]);
+    tick();
+    return () => { mounted = false; };
+  }, [filteredRequests, settings]);
+
+  // Reports KPIs and charts
+  const reportKpis = useMemo(() => ({
+    sla: getSLACompliance(filteredRequests, Number(settings.slaThreshold) || 60, !!settings.useTimestampResolution),
+    avgResMins: getAvgResolutionMinutes(filteredRequests, !!settings.useTimestampResolution),
+    monthlyVolume: getMonthlyVolume(filteredRequests),
+    monthlyCost: getMonthlyCost(filteredRequests, data?.admins || [], 25, !!settings.useTimestampResolution),
+  }), [filteredRequests, data, settings.slaThreshold, settings.useTimestampResolution]);
 
   const reportsStatusPie = useMemo(() => {
     const by = { Approved: 0, Rejected: 0, Pending: 0, Resolved: 0 };
@@ -180,9 +228,7 @@ const Dashboard = ({ user, data, onLogout }) => {
       const k = r.department_name || r.department || 'Unknown';
       counts.set(k, (counts.get(k) || 0) + 1);
     });
-    return Array.from(counts.entries())
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    return Array.from(counts.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [data, filteredRequests, settings.deptChartScope]);
 
   const handleSearch = (query) => {
@@ -474,7 +520,7 @@ const Dashboard = ({ user, data, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header user={user} onLogout={onLogout} onSearch={handleSearch} onNavigate={handleNavigate} />
+      <Header user={user} onLogout={onLogout} onSearch={handleSearch} onSearchScope={(scope) => updateFilter('searchScope', scope)} onNavigate={handleNavigate} />
       {/* pass real department values from CSV into Sidebar so dropdown reflects actual data */}
       <Sidebar
         user={user}

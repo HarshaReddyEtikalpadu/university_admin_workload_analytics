@@ -76,28 +76,41 @@ export const filterByType = (requests, type) => {
 /**
  * Search requests by query string
  */
-export const searchRequests = (requests, query) => {
+export const searchRequests = (requests, query, scope = 'All') => {
   if (!requests) return [];
   if (!query || query.trim() === '') return requests;
   
   const searchTerm = query.toLowerCase().trim();
   
   return requests.filter(req => {
-    const requestId = String(req.request_id || '').toLowerCase();
-    const requestNumber = String(req.request_number || '').toLowerCase();
-    const type = String(req.request_type || '').toLowerCase();
-    const department = String(req.department_name || '').toLowerCase();
-    const status = String(req.status || '').toLowerCase();
-    const adminName = String(req.assigned_admin_name || '').toLowerCase();
-    
-    return (
-      requestId.includes(searchTerm) ||
-      requestNumber.includes(searchTerm) ||
-      type.includes(searchTerm) ||
-      department.includes(searchTerm) ||
-      status.includes(searchTerm) ||
-      adminName.includes(searchTerm)
-    );
+    const fields = {
+      Requests: [
+        String(req.request_id || ''),
+        String(req.request_number || ''),
+        String(req.request_type || ''),
+        String(req.status || ''),
+      ],
+      Departments: [
+        String(req.department_name || req.department || ''),
+      ],
+      Admins: [
+        String(req.assigned_admin_name || ''),
+      ],
+      All: [],
+    };
+    // All = union of all categories
+    if (scope === 'All' || !fields[scope]) {
+      fields.All = [
+        String(req.request_id || ''),
+        String(req.request_number || ''),
+        String(req.request_type || ''),
+        String(req.status || ''),
+        String(req.department_name || req.department || ''),
+        String(req.assigned_admin_name || ''),
+      ];
+    }
+    const bucket = (scope === 'All' || !fields[scope]) ? fields.All : fields[scope];
+    return bucket.some((v) => v.toLowerCase().includes(searchTerm));
   });
 };
 
@@ -135,7 +148,7 @@ export const applyAllFilters = (requests, user, filters = {}) => {
   }
 
   if (filters.search) {
-    filtered = searchRequests(filtered, filters.search);
+    filtered = searchRequests(filtered, filters.search, filters.searchScope || 'All');
   }
 
   return filtered;
