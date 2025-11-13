@@ -65,7 +65,7 @@ const HeatmapTable = ({ data }) => {
         <h3 className="text-lg font-semibold text-gray-800">🔥 Peak Workload Hours (Heatmap)</h3>
         <div className="flex items-center gap-2 text-sm">
           <span className="text-gray-500">Last updated: just now</span>
-          <button className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200">Refresh</button>
+          
         </div>
       </div>
 

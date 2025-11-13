@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import { generateSampleData } from './sampleData';
+import { normalizeHeaders, normalizeRow } from './dataUtils';
 
 /**
  * Load CSV file and parse it
@@ -61,15 +62,75 @@ export const loadAllData = async () => {
       loadCSV('/data/daily_summary.csv'),
     ]);
     
-    // If requests data loaded successfully, use it
-    if (requests && requests.length > 0) {
+    // Normalize + coerce datasets
+    const normalizeDataset = (rows = []) => {
+      if (!rows || rows.length === 0) return [];
+      const headers = Object.keys(rows[0] || {});
+      const nh = normalizeHeaders(headers);
+      return rows.map((r) => normalizeRow(r, headers));
+    };
+
+    const toNumber = (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const toISODate = (v) => {
+      if (!v) return '';
+      const s = String(v).trim();
+      let d = new Date(s);
+      if (!isNaN(d)) return d.toISOString();
+      // Try DD/MM/YYYY or MM/DD/YYYY
+      const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/);
+      if (m) {
+        let a = parseInt(m[1], 10), b = parseInt(m[2], 10), y = parseInt(m[3], 10);
+        if (y < 100) y += 2000;
+        // If first number > 12, assume DD/MM; otherwise assume MM/DD
+        const dd = a > 12 ? a : b;
+        const mm = a > 12 ? b : a;
+        const hh = m[4] ? parseInt(m[4], 10) : 0;
+        const min = m[5] ? parseInt(m[5], 10) : 0;
+        d = new Date(y, mm - 1, dd, hh, min, 0);
+        if (!isNaN(d)) return d.toISOString();
+      }
+      return '';
+    };
+
+    const normRequests = normalizeDataset(requests || []).map((r) => ({
+      ...r,
+      processing_time_minutes: toNumber(r.processing_time_minutes),
+      error_count: toNumber(r.error_count),
+      assigned_admin_id: toNumber(r.assigned_admin_id),
+      department_id: toNumber(r.department_id),
+      created_at: toISODate(r.created_at),
+      resolved_at: toISODate(r.resolved_at),
+    }));
+
+    const normAdmins = normalizeDataset(admins || []).map((a) => ({
+      ...a,
+      admin_id: toNumber(a.admin_id),
+      hourly_rate: a.hourly_rate ? Number(a.hourly_rate) : a.hourly_rate,
+      department_id: toNumber(a.department_id),
+    }));
+
+    const normDepartments = normalizeDataset(departments || []).map((d) => ({
+      ...d,
+      department_id: toNumber(d.department_id),
+    }));
+
+    const normRequestTypes = normalizeDataset(requestTypes || []);
+    const normWorklog = normalizeDataset(workloadLog || []);
+    const normDaily = normalizeDataset(dailySummary || []);
+
+    // If we got any requests after normalization, use them
+    if (normRequests && normRequests.length > 0) {
       return {
-        requests,
-        admins: admins || [],
-        departments: departments || [],
-        requestTypes: requestTypes || [],
-        workloadLog: workloadLog || [],
-        dailySummary: dailySummary || [],
+        requests: normRequests,
+        admins: normAdmins,
+        departments: normDepartments,
+        requestTypes: normRequestTypes,
+        workloadLog: normWorklog,
+        dailySummary: normDaily,
         source: 'csv',
       };
     }

@@ -77,16 +77,19 @@ export const calculateKPIs = (requests) => {
   
   const avgProcessingTime = calculateMean(requests.map(r => Number(r.processing_time_minutes) || 0));
   
+  // Decisions: consider only Approved and Rejected as outcomes.
   const approved = requests.filter(r => r.status === 'Approved').length;
   const rejected = requests.filter(r => r.status === 'Rejected').length;
   const pending = requests.filter(r => r.status === 'Pending').length;
-  const resolved = requests.filter(r => r.status === 'Resolved').length;
+  const resolved = requests.filter(r => r.status === 'Resolved').length; // kept for other uses if needed
+
+  const decisions = approved + rejected;
+  const approvalRate = decisions > 0 ? (approved / decisions) * 100 : 0;
+  const rejectionRate = decisions > 0 ? (rejected / decisions) * 100 : 0;
   
-  const approvalRate = resolved > 0 ? (approved / resolved) * 100 : 0;
-  const rejectionRate = resolved > 0 ? (rejected / resolved) * 100 : 0;
-  
-  const totalErrors = requests.reduce((sum, req) => sum + (Number(req.error_count) || 0), 0);
-  const errorRate = totalRequests > 0 ? (totalErrors / totalRequests) * 100 : 0;
+  // Error rate: percent of requests with any errors (cap at 100%)
+  const requestsWithErrors = requests.filter((req) => (Number(req.error_count) || 0) > 0).length;
+  const errorRate = totalRequests > 0 ? (requestsWithErrors / totalRequests) * 100 : 0;
 
   return {
     totalRequests,

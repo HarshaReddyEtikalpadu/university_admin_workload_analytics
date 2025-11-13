@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const Calendar = () => {
   // Simple placeholder month grid
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const cells = Array.from({ length: 42 }, (_, i) => i + 1);
+
+  useEffect(() => {
+    console.log('[dev hint] If KPI values look wrong, inspect Dashboard diagnostics or CSV parsing code (utils/calculations or CSV parser).');
+  }, []);
+
   return (
     <main className="ml-64 mt-20 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">

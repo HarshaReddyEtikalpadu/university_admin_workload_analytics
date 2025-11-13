@@ -6,15 +6,15 @@ import {
   FileText, 
   Users, 
   Settings, 
-  HelpCircle,
   Filter,
   Calendar,
   ChevronDown,
-  Eraser
+  Eraser,
+  Lightbulb
 } from 'lucide-react';
 import { DEPARTMENTS, STATUSES, PRIORITIES } from '../utils/constants';
 
-const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, activeSection }) => {
+const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, activeSection, departments }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const getRoleDisplay = (role) => {
@@ -22,7 +22,7 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
       case 'admin':
         return 'Individual Admin';
       case 'manager':
-        return 'Department Manager';
+        return 'Senior Manager';
       case 'analyst':
         return 'System Analyst';
       default:
@@ -54,7 +54,7 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800 truncate">{user?.name || 'User'}</p>
+              <p className="text-sm font-semibold text-gray-800 truncate">{user?.name || 'Jason West'}</p>
               <p className="text-xs text-gray-500 truncate">{getRoleDisplay(user?.role)}</p>
               <p className="text-xs text-gray-400 truncate">{user?.department || 'Department'}</p>
             </div>
@@ -81,6 +81,15 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
             >
               <BarChart3 className="w-5 h-5" />
               {!isCollapsed && <span>Analytics</span>}
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => onNavigate && onNavigate('recommendations')}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg transition-colors ${isActive('recommendations') ? 'bg-primary-blue text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+            >
+              <Lightbulb className="w-5 h-5" />
+              {!isCollapsed && <span>Recommendations</span>}
             </button>
           </li>
           <li>
@@ -131,6 +140,10 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-gray-600" />
             <h3 className="text-sm font-semibold text-gray-700">Filters</h3>
+            {/* compact display of current date range */}
+            <div className="ml-auto text-xs text-gray-500">
+              {filters?.dateRange && filters?.dateRange !== 'All' ? filters.dateRange : 'All time'}
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -143,38 +156,8 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue"
               >
                 <option value="All">All Departments</option>
-                {DEPARTMENTS.map(dept => (
+                {(departments && departments.length ? departments : DEPARTMENTS).map(dept => (
                   <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
-              <select
-                value={filters?.status || 'All'}
-                onChange={(e) => onFilterChange && onFilterChange('status', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue"
-              >
-                <option value="All">All Statuses</option>
-                {Object.values(STATUSES).map(status => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Priority Filter */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Priority</label>
-              <select
-                value={filters?.priority || 'All'}
-                onChange={(e) => onFilterChange && onFilterChange('priority', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue"
-              >
-                <option value="All">All Priorities</option>
-                {Object.values(PRIORITIES).map(priority => (
-                  <option key={priority} value={priority}>{priority}</option>
                 ))}
               </select>
             </div>
@@ -188,12 +171,12 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
                   onChange={(e) => onFilterChange && onFilterChange('dateRange', e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-blue"
                 >
-                  <option value="All">All Time</option>
-                  <option value="Last 7 days">Last 7 days</option>
-                  <option value="Last 30 days">Last 30 days</option>
+                  <option value="This month">This month</option>
+                  <option value="Last month">Last month</option>
                   <option value="Last 3 months">Last 3 months</option>
                   <option value="Last 6 months">Last 6 months</option>
-                  <option value="This year">This year</option>
+                  <option value="Last year">Last year</option>
+                  <option value="All">All Time</option>
                   <option value="Custom">Custom range</option>
                 </select>
                 {filters?.dateRange === 'Custom' && (
@@ -214,12 +197,14 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
                 )}
               </div>
             </div>
+
+
           </div>
         </div>
       )}
 
       {/* Bottom Actions */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+      <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
         <div className="space-y-2">
           <button
             disabled={!hasActiveFilters}
@@ -233,10 +218,7 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
             <Settings className="w-5 h-5" />
             {!isCollapsed && <span className="text-sm">Settings</span>}
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-            <HelpCircle className="w-5 h-5" />
-            {!isCollapsed && <span className="text-sm">Help</span>}
-          </button>
+          {/* Help removed per request */}
         </div>
       </div>
     </aside>

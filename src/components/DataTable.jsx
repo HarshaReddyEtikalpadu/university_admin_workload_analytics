@@ -1,8 +1,8 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { REQUEST_TYPES, STATUSES, PRIORITIES } from '../utils/constants';
 
-const DataTable = ({ data, onExport }) => {
+const DataTable = ({ data }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const rowsPerPage = 10;
@@ -78,12 +78,67 @@ const DataTable = ({ data, onExport }) => {
     return 'text-gray-700';
   };
 
+  // CSV download helpers (inside component for access to data)
+  const downloadCSV = (filename, rows) => {
+    const escape = (v) => {
+      const s = (v ?? '').toString().replace(/"/g, '""');
+      const needsQuotes = s.includes('"') || s.includes(',') || s.includes('\n');
+      return needsQuotes ? `"${s}"` : s;
+    };
+    const body = rows.map((r) => r.map(escape).join(',')).join('\n');
+    const csv = `\uFEFF${body}`; // BOM for Excel on Windows
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
+  const handleExportCSV = () => {
+    const header = [
+      'request_id',
+      'request_number',
+      'request_type',
+      'department_name',
+      'status',
+      'priority',
+      'processing_time_minutes',
+      'created_at',
+      'resolved_at',
+      'assigned_admin_id',
+      'assigned_admin_name',
+    ];
+    const rows = [header];
+    (Array.isArray(data) ? data : []).forEach((r) => {
+      rows.push([
+        r.request_id,
+        r.request_number,
+        r.request_type,
+        r.department_name || r.department,
+        r.status,
+        r.priority,
+        r.processing_time_minutes,
+        r.created_at,
+        r.resolved_at,
+        r.assigned_admin_id,
+        r.assigned_admin_name,
+      ]);
+    });
+    const ts = new Date();
+    const stamp = `${ts.getFullYear()}-${String(ts.getMonth() + 1).padStart(2, '0')}-${String(ts.getDate()).padStart(2, '0')}_${String(ts.getHours()).padStart(2, '0')}${String(ts.getMinutes()).padStart(2, '0')}`;
+    downloadCSV(`my_tasks_${stamp}.csv`, rows);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-md p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">📋 Request Details</h3>
+        <h3 className="text-lg font-semibold text-gray-800">Request Details</h3>
         <button
-          onClick={() => onExport && onExport(data)}
+          onClick={handleExportCSV}
           className="flex items-center gap-2 px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Download className="w-4 h-4" />
@@ -101,7 +156,7 @@ const DataTable = ({ data, onExport }) => {
               >
                 Request ID
                 {sortConfig.key === 'request_id' && (
-                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  <span className="ml-1">{sortConfig.direction === 'asc' ? 'â†‘' : 'â†“'}</span>
                 )}
               </th>
               <th
@@ -110,7 +165,7 @@ const DataTable = ({ data, onExport }) => {
               >
                 Type
                 {sortConfig.key === 'request_type' && (
-                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  <span className="ml-1">{sortConfig.direction === 'asc' ? 'â†‘' : 'â†“'}</span>
                 )}
               </th>
               <th
@@ -119,7 +174,7 @@ const DataTable = ({ data, onExport }) => {
               >
                 Department
                 {sortConfig.key === 'department_name' && (
-                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  <span className="ml-1">{sortConfig.direction === 'asc' ? 'â†‘' : 'â†“'}</span>
                 )}
               </th>
               <th
@@ -128,7 +183,7 @@ const DataTable = ({ data, onExport }) => {
               >
                 Processing Time
                 {sortConfig.key === 'processing_time_minutes' && (
-                  <span className="ml-1">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                  <span className="ml-1">{sortConfig.direction === 'asc' ? 'â†‘' : 'â†“'}</span>
                 )}
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>

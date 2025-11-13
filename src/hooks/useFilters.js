@@ -11,7 +11,7 @@ export const useFilters = (requests, user) => {
     priority: 'All',
     type: 'All',
     search: '',
-    dateRange: 'All',
+    dateRange: 'This month',
     dateStart: '',
     dateEnd: '',
   });

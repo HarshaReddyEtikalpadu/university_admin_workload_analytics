@@ -1,6 +1,19 @@
 const MetricCard = ({ icon: Icon, label, value, trend, trendValue, trendLabel, iconColor = 'bg-blue-500' }) => {
-  const trendColor = trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-600';
-  const trendSymbol = trend === 'up' ? '▲' : trend === 'down' ? '▼' : '•';
+  const isNegativeWhenUp = () => {
+    const badWords = ['error', 'rejection', 'cost', 'avg processing time'];
+    const lower = (label || '').toLowerCase();
+    return badWords.some((w) => lower.includes(w));
+  };
+
+  // Unicode arrows: up, down, neutral (right)
+  const trendSymbol = trend === 'up' ? '\u2191' : trend === 'down' ? '\u2193' : '\u2192';
+
+  const trendColor = (() => {
+    if (!trend || trend === 'neutral') return 'text-gray-500';
+    const upIsBad = isNegativeWhenUp();
+    if (trend === 'up') return upIsBad ? 'text-red-600' : 'text-green-600';
+    return upIsBad ? 'text-green-600' : 'text-red-600';
+  })();
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow duration-200 border border-gray-50">
@@ -11,7 +24,7 @@ const MetricCard = ({ icon: Icon, label, value, trend, trendValue, trendLabel, i
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">{label}</p>
-            {trend && (
+            {typeof trendValue !== 'undefined' && (
               <div className={`text-xs font-semibold ${trendColor} flex items-center gap-1`}>
                 <span aria-hidden="true">{trendSymbol}</span>
                 <span>{trendValue}%</span>
@@ -20,9 +33,7 @@ const MetricCard = ({ icon: Icon, label, value, trend, trendValue, trendLabel, i
           </div>
 
           <p className="text-2xl font-bold text-gray-800 mt-2">{value}</p>
-          {trendLabel && (
-            <p className="text-xs text-gray-400 mt-1">{trendLabel}</p>
-          )}
+          {trendLabel && <p className="text-xs text-gray-400 mt-1">{trendLabel}</p>}
         </div>
       </div>
     </div>

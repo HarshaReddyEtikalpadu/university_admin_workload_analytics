@@ -60,9 +60,9 @@ const PieChartComponent = ({
       {/* Custom legend below the chart to avoid overlap */}
       <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
         {dataWithPercent.map((item, idx) => (
-          <div key={item.name} className="flex items-center gap-2 text-sm text-gray-700">
+          <div key={`${item.name}-${idx}`} className="flex items-center gap-2 text-sm text-gray-700">
             <span className="inline-block w-3.5 h-3.5 rounded" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
-            <span className="truncate">{item.name}</span>
+            <span className="truncate" title={item.name}>{item.name}</span>
           </div>
         ))}
       </div>

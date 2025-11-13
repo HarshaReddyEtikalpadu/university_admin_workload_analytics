@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { useData } from '../context/DataContext';
 import { useFilters } from '../hooks/useFilters';
 import { getSLACompliance, getAvgResolutionMinutes, getMonthlyVolume, getMonthlyCost } from '../utils/calculations';
+import { useSettings } from '../context/SettingsContext';
 
 const round = (n, d = 0) => (Number.isFinite(n) ? Number(n.toFixed(d)) : 0);
 
@@ -12,23 +13,27 @@ const Reports = ({ user }) => {
   const navigate = useNavigate();
   const { data } = useData();
   const { filters, filteredRequests, updateFilter, resetFilters } = useFilters(data?.requests || [], user);
+  const { settings } = useSettings();
 
   const handleNavigate = (dest) => {
-    if (dest === 'dashboard') return navigate('/dashboard');
     if (dest === 'settings') return navigate('/settings');
-    if (dest === 'calendar') return navigate('/calendar');
-    if (dest === 'reports') return navigate('/reports');
+    const inDashboard = ['dashboard', 'analytics', 'recommendations', 'tasks', 'reports', 'team', 'calendar'];
+    if (inDashboard.includes(dest)) {
+      try {
+        sessionStorage.setItem('scrollToSection', dest);
+      } catch {}
+      return navigate('/dashboard');
+    }
   };
 
   const kpis = useMemo(() => {
-    // Use settings defaults via conservative choices (60 min SLA, timestamps)
     return {
-      sla: getSLACompliance(filteredRequests, 60, true),
-      avgResMins: getAvgResolutionMinutes(filteredRequests, true),
+      sla: getSLACompliance(filteredRequests, Number(settings.slaThreshold) || 60, !!settings.useTimestampResolution),
+      avgResMins: getAvgResolutionMinutes(filteredRequests, !!settings.useTimestampResolution),
       monthlyVolume: getMonthlyVolume(filteredRequests),
-      monthlyCost: getMonthlyCost(filteredRequests, data?.admins || [], 25, true),
+      monthlyCost: getMonthlyCost(filteredRequests, data?.admins || [], 25, !!settings.useTimestampResolution),
     };
-  }, [filteredRequests, data]);
+  }, [filteredRequests, data, settings.slaThreshold, settings.useTimestampResolution]);
 
   // CSV export helpers
   const downloadCSV = (filename, rows) => {
@@ -177,3 +182,6 @@ const Reports = ({ user }) => {
 };
 
 export default Reports;
+
+
+

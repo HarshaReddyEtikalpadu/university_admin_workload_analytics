@@ -2,28 +2,9 @@
  * Filter requests based on user role
  */
 export const filterByRole = (requests, user) => {
-  if (!requests || !user) return [];
-  
-  switch (user.role) {
-    case 'admin':
-      // Individual Admin: Show only requests assigned to this admin
-      return requests.filter(req => 
-        Number(req.assigned_admin_id) === user.adminId
-      );
-    
-    case 'manager':
-      // Department Manager: Show only requests from their department
-      return requests.filter(req => 
-        Number(req.department_id) === user.departmentId
-      );
-    
-    case 'analyst':
-      // System Analyst: Show all requests
-      return requests;
-    
-    default:
-      return requests;
-  }
+  if (!requests) return [];
+  // Super admin view: no role-based scoping. Always return all requests.
+  return requests;
 };
 
 /**
@@ -32,8 +13,14 @@ export const filterByRole = (requests, user) => {
 export const filterByDepartment = (requests, department) => {
   if (!requests) return [];
   if (!department || department === 'All') return requests;
-  
-  return requests.filter(req => req.department_name === department);
+  const target = String(department).trim().toLowerCase();
+
+  return requests.filter((req) => {
+    const name = String(req.department_name ?? req.department ?? '')
+      .trim()
+      .toLowerCase();
+    return name === target;
+  });
 };
 
 /**
@@ -42,8 +29,14 @@ export const filterByDepartment = (requests, department) => {
 export const filterByStatus = (requests, status) => {
   if (!requests) return [];
   if (!status || status === 'All') return requests;
-  
-  return requests.filter(req => req.status === status);
+  const target = String(status).trim().toLowerCase();
+
+  return requests.filter((req) => {
+    const value = String(req.status ?? req.Status ?? '')
+      .trim()
+      .toLowerCase();
+    return value === target;
+  });
 };
 
 /**
@@ -52,8 +45,14 @@ export const filterByStatus = (requests, status) => {
 export const filterByPriority = (requests, priority) => {
   if (!requests) return [];
   if (!priority || priority === 'All') return requests;
-  
-  return requests.filter(req => req.priority === priority);
+  const target = String(priority).trim().toLowerCase();
+
+  return requests.filter((req) => {
+    const value = String(req.priority ?? req.Priority ?? '')
+      .trim()
+      .toLowerCase();
+    return value === target;
+  });
 };
 
 /**
@@ -62,8 +61,16 @@ export const filterByPriority = (requests, priority) => {
 export const filterByType = (requests, type) => {
   if (!requests) return [];
   if (!type || type === 'All') return requests;
-  
-  return requests.filter(req => req.request_type === type);
+  const target = String(type).trim().toLowerCase();
+
+  return requests.filter((req) => {
+    const value = String(
+      req.request_type ?? req.type ?? req.requestType ?? ''
+    )
+      .trim()
+      .toLowerCase();
+    return value === target;
+  });
 };
 
 /**
@@ -97,27 +104,27 @@ export const searchRequests = (requests, query) => {
 /**
  * Apply all filters to requests
  */
-export const applyAllFilters = (requests, user, filters) => {
+export const applyAllFilters = (requests, user, filters = {}) => {
   if (!requests) return [];
-  
+
   let filtered = [...requests];
-  
-  // First, apply role-based filter
+
+  // Super admin view: role filter returns all items
   filtered = filterByRole(filtered, user);
-  
-  // Then apply other filters
+
+  // Apply other filters
   if (filters.department) {
     filtered = filterByDepartment(filtered, filters.department);
   }
-  
+
   if (filters.status) {
     filtered = filterByStatus(filtered, filters.status);
   }
-  
+
   if (filters.priority) {
     filtered = filterByPriority(filtered, filters.priority);
   }
-  
+
   if (filters.type) {
     filtered = filterByType(filtered, filters.type);
   }
@@ -126,11 +133,11 @@ export const applyAllFilters = (requests, user, filters) => {
   if (filters.dateRange || (filters.dateStart && filters.dateEnd)) {
     filtered = filterByDateRange(filtered, filters);
   }
-  
+
   if (filters.search) {
     filtered = searchRequests(filtered, filters.search);
   }
-  
+
   return filtered;
 };
 
@@ -149,6 +156,20 @@ export const filterByDateRange = (requests, { dateRange = 'All', dateStart = '',
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   switch (dateRange) {
+    case 'This month': {
+      // current month: start of current month to start of next month (exclusive)
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      break;
+    }
+    case 'Last month': {
+      const now = new Date();
+      const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      start = new Date(startOfCurrentMonth);
+      start.setMonth(start.getMonth() - 1); // first day of previous month
+      end = new Date(startOfCurrentMonth); // first day of current month (exclusive end)
+      break;
+    }
     case 'Last 7 days':
       start = new Date(startOfToday);
       start.setDate(start.getDate() - 6);
@@ -178,6 +199,10 @@ export const filterByDateRange = (requests, { dateRange = 'All', dateStart = '',
     case 'This year':
       start = new Date(now.getFullYear(), 0, 1);
       end = new Date(now.getFullYear() + 1, 0, 1);
+      break;
+    case 'Last year':
+      start = new Date(now.getFullYear() - 1, 0, 1);
+      end = new Date(now.getFullYear(), 0, 1);
       break;
     case 'Custom':
     default:

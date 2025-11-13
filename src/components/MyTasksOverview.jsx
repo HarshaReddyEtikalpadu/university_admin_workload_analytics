@@ -16,7 +16,7 @@ const isInCurrentWeek = (date) => {
   return date >= start && date < end;
 };
 
-const MyTasksOverview = ({ requests = [], user, onRefresh, onClearFilters }) => {
+const MyTasksOverview = ({ requests = [], user }) => {
   const metrics = useMemo(() => {
     const now = new Date();
     const sevenDaysAgo = new Date(now);
@@ -78,11 +78,7 @@ const MyTasksOverview = ({ requests = [], user, onRefresh, onClearFilters }) => 
           <h2 className="text-2xl font-bold text-gray-900">My Tasks</h2>
           <p className="text-sm text-gray-500">Home › My Tasks</p>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-500">Last updated: just now</span>
-          <button onClick={onRefresh} className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200">Refresh</button>
-          <button onClick={onClearFilters} className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200">Clear Filters</button>
-        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500">Last updated: just now</div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {cards.map((c) => (
@@ -98,4 +94,3 @@ const MyTasksOverview = ({ requests = [], user, onRefresh, onClearFilters }) => 
 };
 
 export default MyTasksOverview;
-

@@ -18,7 +18,7 @@ const Header = ({ user, onLogout, onSearch, onNavigate }) => {
       case 'admin':
         return 'Individual Admin';
       case 'manager':
-        return 'Department Manager';
+        return 'Senior Manager';
       case 'analyst':
         return 'System Analyst';
       default:
@@ -72,7 +72,7 @@ const Header = ({ user, onLogout, onSearch, onNavigate }) => {
             <User className="w-6 h-6 text-white" />
           </div>
           <div className="text-right">
-            <p className="text-sm font-semibold text-gray-800">{user?.name || 'User'}</p>
+            <p className="text-sm font-semibold text-gray-800">{user?.name || 'Jason West'}</p>
             <p className="text-xs text-gray-500">{getRoleDisplay(user?.role)}</p>
           </div>
         </div>
