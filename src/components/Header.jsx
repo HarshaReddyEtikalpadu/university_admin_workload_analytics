@@ -105,7 +105,7 @@ const Header = ({ user, onLogout, onSearch, onSearchScope, onNavigate }) => {
 
         {/* User Profile */}
         <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-          <div className="w-10 h-10 bg-primary-blue rounded-full flex items-center justify-center">
+          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
             <User className="w-6 h-6 text-white" />
           </div>
           <div className="text-right">

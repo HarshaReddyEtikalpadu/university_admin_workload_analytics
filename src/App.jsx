@@ -8,6 +8,9 @@ import Settings from './pages/Settings';
 import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import LoginPage from './components/LoginPage';
+import Register from './pages/Register';
+import Forgot from './pages/Forgot';
+import Reset from './pages/Reset';
 import Footer from './components/Footer';
 import StatusBar from './components/StatusBar';
 
@@ -81,6 +84,9 @@ function App() {
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Routes>
           <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot" element={<Forgot />} />
+          <Route path="/reset" element={<Reset />} />
           <Route
             path="/dashboard"
             element={

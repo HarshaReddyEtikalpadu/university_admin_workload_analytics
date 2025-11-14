@@ -68,7 +68,7 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
           <li>
             <button
               onClick={() => onNavigate && onNavigate('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg font-medium ${isActive('dashboard') ? 'bg-primary-blue text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-lg font-medium ${isActive('dashboard') ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
             >
               <LayoutDashboard className="w-5 h-5" />
               {!isCollapsed && <span>Dashboard</span>}
@@ -209,7 +209,7 @@ const Sidebar = ({ user, filters, onFilterChange, onNavigate, onResetFilters, ac
           <button
             disabled={!hasActiveFilters}
             onClick={() => onResetFilters && onResetFilters()}
-            className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg transition-colors ${hasActiveFilters ? 'bg-primary-blue text-white hover:bg-primary-blue/90' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+            className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-lg transition-colors ${hasActiveFilters ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
           >
             <Eraser className="w-5 h-5" />
             {!isCollapsed && <span className="text-sm font-medium">Clear Filters</span>}

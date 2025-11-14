@@ -1,8 +1,8 @@
 import { DEMO_USERS, APP_NAME, APP_SUBTITLE } from '../utils/constants';
-import { User, Eye, EyeOff } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Eye, EyeOff, Globe } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
-import { useNavigate } from 'react-router-dom';
 
 const DEMO_PASSWORD = 'Silverleaf@123';
 
@@ -33,9 +33,9 @@ const LoginPage = ({ onLogin }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    const ok = email.trim().toLowerCase() === (demoAdmin.email || '').toLowerCase() && password === DEMO_PASSWORD;
-    if (!ok) {
-      setError('Invalid email or password for the demo account.');
+    // Do not reveal demo email; accept any email for the demo when password matches
+    if (password !== DEMO_PASSWORD) {
+      setError('Invalid password.');
       return;
     }
     if (onLogin) onLogin(demoAdmin);
@@ -62,7 +62,7 @@ const LoginPage = ({ onLogin }) => {
                 <input
                   type="email"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-blue"
-                  placeholder={demoAdmin.email}
+                  placeholder="Enter email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -95,7 +95,7 @@ const LoginPage = ({ onLogin }) => {
                   <input type="checkbox" className="rounded border-gray-300" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
                   Remember me
                 </label>
-                <a className="text-gray-500 hover:text-gray-700" href="#">Forgot Password?</a>
+                <Link className="text-gray-500 hover:text-gray-700" to="/forgot">Forgot Password?</Link>
               </div>
 
               {error && (
@@ -106,6 +106,15 @@ const LoginPage = ({ onLogin }) => {
                 Log In
               </button>
 
+              <div className="mt-3">
+                <Link
+                  to="/register"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span className="font-semibold">Create Account</span>
+                </Link>
+              </div>
               {/* Remove demo hints for production-like experience */}
             </form>
             {/* No demo label shown */}
