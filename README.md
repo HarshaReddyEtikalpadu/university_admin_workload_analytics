@@ -1,9 +1,5 @@
 # 🏫 Silverleaf Academy — Admin Workload Analysis Dashboard
 
-[![React](https://img.shields.io/badge/React-18.0+-blue?logo=react)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC?logo=tailwindcss)](https://tailwindcss.com/)
-[![Vite](https://img.shields.io/badge/Vite-Build%20Tool-646CFF?logo=vite)](https://vitejs.dev/)
-[![License](https://img.shields.io/badge/License-Research%20Use-orange)](#license)
 
 A **modern, data-driven web application** designed to analyze and visualize administrative workload patterns at **Silverleaf Academy**.  
 It transforms raw CSV data into actionable insights using **interactive dashboards**, **real-time analytics**, and **data-driven recommendations** to improve decision-making and efficiency.
@@ -106,4 +102,36 @@ It helps administrators monitor workload distribution, identify performance bott
 | **CSV Parsing** | Papa Parse |
 | **Data Storage** | Client-side CSV / Local Session |
 
+---## 📈 Future Enhancements
+
+- 🔒 **JWT / OAuth-based Authentication**  
+  Implement secure login and session management with industry-standard authentication mechanisms.
+
+- 🌐 **Backend API (Node.js + Express + PostgreSQL)**  
+  Add RESTful APIs for dynamic data fetching, analytics computation, and persistent storage.
+
+- 🧾 **Export to Excel / PDF**  
+  Enable downloadable reports and analytics summaries for offline sharing and record-keeping.
+
+- 📆 **Interactive Calendar View**  
+  Visualize department schedules, requests, and workload timelines with drag-and-drop events.
+
+- 👥 **Team Management & Role Control**  
+  Manage admin users, departments, and access levels through a centralized interface.
+
+- 📱 **Progressive Web App (PWA) Support**  
+  Allow offline access, faster load times, and mobile install capability for enhanced usability.
+
 ---
+
+## 🔗 Useful References
+
+- [React Documentation](https://react.dev/)  
+- [Vite Documentation](https://vitejs.dev/)  
+- [Tailwind CSS](https://tailwindcss.com/)  
+- [Recharts Documentation](https://recharts.org/en-US/)
+
+---
+
+> **Built with ❤️ by the Silverleaf Academy Research Team**  
+> *Empowering data-driven academic administration.*
