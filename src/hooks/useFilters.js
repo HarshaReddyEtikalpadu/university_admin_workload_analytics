@@ -12,13 +12,13 @@ export const useFilters = (requests, user) => {
     type: 'All',
     search: '',
     searchScope: 'All',
-    dateRange: 'This month',
+    dateRange: 'All',
     dateStart: '',
     dateEnd: '',
   });
 
   const filteredRequests = useMemo(() => {
-    if (!requests || !user) return [];
+    if (!requests) return [];
     return applyAllFilters(requests, user, filters);
   }, [requests, user, filters]);
 

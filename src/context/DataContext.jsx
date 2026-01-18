@@ -13,6 +13,10 @@ export const DataProvider = ({ children }) => {
     setError(null);
     try {
       const loaded = await loadAllData();
+      // Debug: log counts so we can confirm data loaded correctly
+      try {
+        console.log('DataProvider: loaded data source=', loaded?.source || 'unknown', 'requests=', (loaded?.requests || []).length, 'admins=', (loaded?.admins || []).length);
+      } catch (e) {}
       setData(loaded);
     } catch (e) {
       setError(e.message || String(e));
